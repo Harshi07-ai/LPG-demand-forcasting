@@ -19,6 +19,4 @@ if prompt := st.chat_input("Ask anything..."):
     response = model.generate_content(prompt)
     answer = response.text
     st.markdown(answer)
-st.session_state.messages.append(
-    {"role": "assistant", "content": answer}
-)
+st.session_state.messages.append({"role": "assistant", "content": answer})
