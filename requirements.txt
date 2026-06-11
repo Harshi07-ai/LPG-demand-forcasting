@@ -1,4 +1,8 @@
 streamlit
+pandas
 numpy
-joblib
 scikit-learn
+joblib
+streamlit
+google-generativeai
+python-dotenv
