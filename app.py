@@ -3,7 +3,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 load_dotenv()
-genai.configure(api_key=os.getenv("AQ.Ab8RN6LGozogthij2tDj3c99iZDtvCXSJv5Q3stcmF9kBvPpeA"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 st.set_page_config(page_title="Gemini Chatbot", page_icon="🤖")
 st.title("🤖 Gemini AI Chatbot")
@@ -19,4 +19,6 @@ if prompt := st.chat_input("Ask anything..."):
         response = model.generate_content(prompt)
         answer = response.text
         st.markdown(answer)
- st.session_state.messages.append({"role": "assistant", "content": answer})
+        st.session_state.messages.append(
+        {"role": "assistant", "content": answer}
+    )
