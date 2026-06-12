@@ -6,7 +6,7 @@ from datetime import datetime
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="AI-Based LPG Demand Forecasting and Inventory Management System Using Machine Learning",
+    page_title="AI-Based LPG Demand Forecasting ",
     page_icon="🔥",
     layout="wide"
 )
@@ -19,7 +19,7 @@ except Exception as e:
     st.stop()
 
 # ================= HEADER =================
-st.title("🔥 LPG Demand Forecasting & Inventory Management System")
+st.title("AI-Based LPG Demand Forecasting and Inventory Management System Using Machine Learning")
 st.markdown("### AI-Based LPG Demand Prediction Dashboard")
 st.markdown("---")
 
