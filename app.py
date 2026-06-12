@@ -3,16 +3,23 @@ import numpy as np
 import joblib
 from datetime import datetime
 import pandas as pd
-import plotly.express as px
+
+# ================= LOAD MODEL =================
 model = joblib.load("lpg_model.pkl")
+
+# ================= PAGE CONFIG =================
 st.set_page_config(
     page_title="LPG Demand Dashboard",
     page_icon="🔥",
     layout="wide"
 )
+
+# ================= HEADER =================
 st.title("🔥 LPG Demand Forecasting Dashboard")
 st.markdown("### AI-Powered Inventory & Demand Analytics System")
 st.markdown("---")
+
+# ================= SIDEBAR =================
 st.sidebar.header("📌 Input Controls")
 
 stock = st.sidebar.number_input(
@@ -36,6 +43,8 @@ st.sidebar.markdown("---")
 st.sidebar.info(
     f"🕒 {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
 )
+
+# ================= KPI METRICS =================
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -48,12 +57,16 @@ with col3:
     st.metric("🌡 Temperature", f"{temperature} °C")
 
 st.markdown("---")
+
+# ================= PREDICTION =================
 if st.button("🚀 Predict Demand"):
 
     try:
         features = np.array([[stock, deliveries, temperature]])
+
         prediction = model.predict(features)
         predicted_demand = float(prediction[0])
+
         reorder_qty = max(0, round(predicted_demand - stock))
 
         status = (
@@ -61,27 +74,22 @@ if st.button("🚀 Predict Demand"):
             if stock < predicted_demand
             else "✅ Stock Sufficient"
         )
+
+        # ================= RESULTS =================
         st.subheader("📊 Prediction Results")
 
         r1, r2, r3 = st.columns(3)
 
         with r1:
-            st.metric(
-                "Predicted Demand",
-                round(predicted_demand, 2)
-            )
+            st.metric("Predicted Demand", round(predicted_demand, 2))
 
         with r2:
-            st.metric(
-                "Inventory Status",
-                status
-            )
+            st.metric("Inventory Status", status)
 
         with r3:
-            st.metric(
-                "Reorder Quantity",
-                reorder_qty
-            )
+            st.metric("Reorder Quantity", reorder_qty)
+
+        # ================= INVENTORY HEALTH =================
         st.subheader("📦 Inventory Health")
 
         stock_percentage = min(
@@ -94,54 +102,26 @@ if st.button("🚀 Predict Demand"):
         st.write(
             f"Inventory Utilization: **{stock_percentage}%**"
         )
+
+        # ================= BAR CHART =================
         st.subheader("📈 Dashboard Analytics View")
 
         data = pd.DataFrame({
-            "Category": [
-                "Stock",
-                "Deliveries",
-                "Predicted Demand"
-            ],
             "Values": [
                 stock,
                 deliveries,
                 predicted_demand
             ]
-        })
+        },
+        index=[
+            "Stock",
+            "Deliveries",
+            "Predicted Demand"
+        ])
 
-        fig = px.bar(
-            data,
-            x="Category",
-            y="Values",
-            color="Category",
-            text="Values",
-            title="LPG Demand Dashboard Overview"
-        )
+        st.bar_chart(data)
 
-        fig.update_layout(
-            height=500,
-            xaxis_title="Category",
-            yaxis_title="Quantity",
-            showlegend=False
-        )
-
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
-        st.subheader("🥧 Resource Distribution")
-
-        pie_fig = px.pie(
-            data,
-            names="Category",
-            values="Values",
-            title="Stock vs Deliveries vs Demand"
-        )
-
-        st.plotly_chart(
-            pie_fig,
-            use_container_width=True
-        )
+        # ================= SUMMARY =================
         st.subheader("📄 Summary Report")
 
         summary = pd.DataFrame({
@@ -167,6 +147,8 @@ if st.button("🚀 Predict Demand"):
 
     except Exception as e:
         st.error(f"Error: {e}")
+
+# ================= FOOTER =================
 st.markdown("---")
 st.caption(
     "🔥 AI-Based LPG Demand Forecasting & Inventory Management Dashboard"
