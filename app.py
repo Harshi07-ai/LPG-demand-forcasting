@@ -6,7 +6,7 @@ from datetime import datetime
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="LPG Demand Forecasting Dashboard",
+    page_title="AI-Based LPG Demand Forecasting and Inventory Management System Using Machine Learning",
     page_icon="🔥",
     layout="wide"
 )
