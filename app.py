@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
+import matplotlib.pyplot as plt
 from datetime import datetime
 
 # ================= PAGE CONFIG =================
@@ -12,15 +13,11 @@ st.set_page_config(
 )
 
 # ================= LOAD MODEL =================
-try:
-    model = joblib.load("lpg_model.pkl")
-except Exception as e:
-    st.error(f"Model Loading Error: {e}")
-    st.stop()
+model = joblib.load("lpg_model.pkl")
 
 # ================= HEADER =================
-st.title("AI-Based LPG Demand Forecasting and Inventory Management System Using Machine Learning")
-st.markdown("### AI-Based LPG Demand Prediction Dashboard")
+st.title("🔥 AI-Based LPG Demand Forecasting and Inventory Management System Using Machine Learning")
+st.markdown("### Smart Inventory Analytics & Demand Prediction Dashboard")
 st.markdown("---")
 
 # ================= SIDEBAR =================
@@ -71,10 +68,7 @@ if st.button("🚀 Predict Demand"):
         prediction = model.predict(features)
         predicted_demand = float(prediction[0])
 
-        reorder_qty = max(
-            0,
-            round(predicted_demand - stock)
-        )
+        reorder_qty = max(0, round(predicted_demand - stock))
 
         status = (
             "⚠ Reorder Required"
@@ -85,21 +79,21 @@ if st.button("🚀 Predict Demand"):
         # ================= RESULTS =================
         st.subheader("📊 Prediction Results")
 
-        c1, c2, c3 = st.columns(3)
+        r1, r2, r3 = st.columns(3)
 
-        with c1:
+        with r1:
             st.metric(
                 "Predicted Demand",
                 round(predicted_demand, 2)
             )
 
-        with c2:
+        with r2:
             st.metric(
                 "Inventory Status",
                 status
             )
 
-        with c3:
+        with r3:
             st.metric(
                 "Reorder Quantity",
                 reorder_qty
@@ -110,42 +104,74 @@ if st.button("🚀 Predict Demand"):
         # ================= INVENTORY HEALTH =================
         st.subheader("📦 Inventory Health")
 
-        inventory_percentage = min(
+        stock_percentage = min(
             int((stock / max(predicted_demand, 1)) * 100),
             100
         )
 
-        st.progress(inventory_percentage)
+        st.progress(stock_percentage)
 
         st.write(
-            f"Inventory Utilization: {inventory_percentage}%"
+            f"Inventory Utilization: {stock_percentage}%"
         )
 
-        st.markdown("---")
-
-        # ================= BAR CHART =================
-        st.subheader("📈 Dashboard Analytics")
-
-        chart_data = pd.DataFrame(
-            {
-                "Values": [
-                    stock,
-                    deliveries,
-                    predicted_demand
-                ]
-            },
-            index=[
+        # ================= DATA =================
+        chart_data = pd.DataFrame({
+            "Category": [
                 "Stock",
                 "Deliveries",
                 "Predicted Demand"
+            ],
+            "Value": [
+                stock,
+                deliveries,
+                predicted_demand
             ]
+        })
+
+        # ================= BAR CHART =================
+        st.subheader("📊 Bar Chart")
+
+        bar_data = chart_data.set_index("Category")
+        st.bar_chart(bar_data)
+
+        # ================= LINE CHART =================
+        st.subheader("📈 Line Chart")
+
+        line_data = pd.DataFrame({
+            "Values": [
+                stock,
+                deliveries,
+                predicted_demand
+            ]
+        },
+        index=[
+            "Stock",
+            "Deliveries",
+            "Demand"
+        ])
+
+        st.line_chart(line_data)
+
+        # ================= PIE CHART =================
+        st.subheader("🥧 Pie Chart")
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+
+        ax.pie(
+            chart_data["Value"],
+            labels=chart_data["Category"],
+            autopct="%1.1f%%",
+            startangle=90
         )
 
-        st.bar_chart(chart_data)
+        ax.set_title(
+            "Stock vs Deliveries vs Predicted Demand"
+        )
 
-        st.markdown("---")
+        st.pyplot(fig)
 
-        # ================= SUMMARY =================
+        # ================= SUMMARY REPORT =================
         st.subheader("📄 Summary Report")
 
         summary = pd.DataFrame({
@@ -170,8 +196,10 @@ if st.button("🚀 Predict Demand"):
         st.table(summary)
 
     except Exception as e:
-        st.error(f"Prediction Error: {e}")
+        st.error(f"Error: {e}")
 
 # ================= FOOTER =================
 st.markdown("---")
-st.caption("🔥 LPG Demand Forecasting Dashboard")
+st.caption(
+    "AI-Based LPG Demand Forecasting and Inventory Management System Using Machine Learning"
+)
