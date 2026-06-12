@@ -1,35 +1,177 @@
 import streamlit as st
-import google.generativeai as genai
-from dotenv import load_dotenv
-import os
-# Load environment variables
-load_dotenv()
-# Configure Gemini safely
-genai.configure(api_key=os.getenv("AQ.Ab8RN6LGozogthij2tDj3c99iZDtvCXSJv5Q3stcmF9kBvPpeA"))
-# Use correct model
-model = genai.GenerativeModel("gemini-1.5-flash")
+import numpy as np
+import pandas as pd
+import joblib
+from datetime import datetime
 
-st.set_page_config(page_title="Gemini Chatbot", page_icon="🤖")
+# ================= PAGE CONFIG =================
+st.set_page_config(
+    page_title="LPG Demand Forecasting Dashboard",
+    page_icon="🔥",
+    layout="wide"
+)
 
-st.title("🤖 Gemini AI Chatbot")
-# Store chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-# Display chat history
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-# User input
-if prompt := st.chat_input("Ask anything..."):
+# ================= LOAD MODEL =================
+try:
+    model = joblib.load("lpg_model.pkl")
+except Exception as e:
+    st.error(f"Model Loading Error: {e}")
+    st.stop()
 
-    # Show user message
-    st.chat_message("user").markdown(prompt)
-    st.session_state.messages.append({"role": "user", "content": prompt})
+# ================= HEADER =================
+st.title("🔥 LPG Demand Forecasting & Inventory Management System")
+st.markdown("### AI-Based LPG Demand Prediction Dashboard")
+st.markdown("---")
 
-    # Gemini response
-    with st.chat_message("assistant"):
-        response = model.generate_content(prompt)
-        answer = response.text
-        st.markdown(answer)
+# ================= SIDEBAR =================
+st.sidebar.header("📌 Input Parameters")
 
-    st.session_state.messages.append({"role": "assistant", "content": answer})
+stock = st.sidebar.number_input(
+    "Stock Available",
+    min_value=0,
+    value=5000
+)
+
+deliveries = st.sidebar.number_input(
+    "Deliveries",
+    min_value=0,
+    value=1000
+)
+
+temperature = st.sidebar.number_input(
+    "Temperature (°C)",
+    value=30
+)
+
+st.sidebar.markdown("---")
+st.sidebar.info(
+    f"🕒 {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}"
+)
+
+# ================= KPI CARDS =================
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("📦 Stock Available", stock)
+
+with col2:
+    st.metric("🚚 Deliveries", deliveries)
+
+with col3:
+    st.metric("🌡 Temperature", f"{temperature} °C")
+
+st.markdown("---")
+
+# ================= PREDICTION =================
+if st.button("🚀 Predict Demand"):
+
+    try:
+        features = np.array([[stock, deliveries, temperature]])
+
+        prediction = model.predict(features)
+        predicted_demand = float(prediction[0])
+
+        reorder_qty = max(
+            0,
+            round(predicted_demand - stock)
+        )
+
+        status = (
+            "⚠ Reorder Required"
+            if stock < predicted_demand
+            else "✅ Stock Sufficient"
+        )
+
+        # ================= RESULTS =================
+        st.subheader("📊 Prediction Results")
+
+        c1, c2, c3 = st.columns(3)
+
+        with c1:
+            st.metric(
+                "Predicted Demand",
+                round(predicted_demand, 2)
+            )
+
+        with c2:
+            st.metric(
+                "Inventory Status",
+                status
+            )
+
+        with c3:
+            st.metric(
+                "Reorder Quantity",
+                reorder_qty
+            )
+
+        st.markdown("---")
+
+        # ================= INVENTORY HEALTH =================
+        st.subheader("📦 Inventory Health")
+
+        inventory_percentage = min(
+            int((stock / max(predicted_demand, 1)) * 100),
+            100
+        )
+
+        st.progress(inventory_percentage)
+
+        st.write(
+            f"Inventory Utilization: {inventory_percentage}%"
+        )
+
+        st.markdown("---")
+
+        # ================= BAR CHART =================
+        st.subheader("📈 Dashboard Analytics")
+
+        chart_data = pd.DataFrame(
+            {
+                "Values": [
+                    stock,
+                    deliveries,
+                    predicted_demand
+                ]
+            },
+            index=[
+                "Stock",
+                "Deliveries",
+                "Predicted Demand"
+            ]
+        )
+
+        st.bar_chart(chart_data)
+
+        st.markdown("---")
+
+        # ================= SUMMARY =================
+        st.subheader("📄 Summary Report")
+
+        summary = pd.DataFrame({
+            "Parameter": [
+                "Stock Available",
+                "Deliveries",
+                "Temperature",
+                "Predicted Demand",
+                "Inventory Status",
+                "Reorder Quantity"
+            ],
+            "Value": [
+                stock,
+                deliveries,
+                f"{temperature} °C",
+                round(predicted_demand, 2),
+                status,
+                reorder_qty
+            ]
+        })
+
+        st.table(summary)
+
+    except Exception as e:
+        st.error(f"Prediction Error: {e}")
+
+# ================= FOOTER =================
+st.markdown("---")
+st.caption("🔥 LPG Demand Forecasting Dashboard")
